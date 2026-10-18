@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Quản trị - Gold Tower Defense</title>
+<style>body{font:16px system-ui;background:#101522;color:#f3f5fb;max-width:1000px;margin:auto;padding:22px}section{background:#1b2435;border:1px solid #344159;border-radius:14px;padding:16px;margin:14px 0}input,button{font:inherit;padding:10px;margin:4px;border-radius:8px}button{cursor:pointer;background:#f3b632;border:0}input{background:#101522;color:white;border:1px solid #52617a}table{width:100%;border-collapse:collapse}td,th{text-align:left;border-bottom:1px solid #344159;padding:8px}pre{white-space:pre-wrap}a{color:#f3b632}</style></head><body>
+<h1>🛡️ Quản trị viên</h1><p><a href="/">← Về trang game</a></p>
+<section><h2>Đăng nhập quản trị</h2><input id="u" placeholder="Tên quản trị"><input id="p" type="password" placeholder="Mật khẩu quản trị"><button onclick="login()">Đăng nhập</button><button onclick="load()">Tải người chơi</button><pre id="msg">Đăng nhập để quản lý người chơi.</pre></section>
+<section><h2>Danh sách người chơi</h2><div style="overflow:auto"><table><thead><tr><th>ID</th><th>Tên</th><th>Vàng</th><th>XP</th><th>Cấp</th><th>Thắng</th><th>Điểm</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody id="rows"></tbody></table></div></section>
+<script>
+const $=id=>document.getElementById(id);
+async function api(url,body){const r=await fetch(url,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const d=await r.json();if(!r.ok)throw Error(d.error||'Có lỗi');return d}
+async function login(){try{await api('/api/admin/login',{username:$('u').value,password:$('p').value});$('msg').textContent='Đăng nhập quản trị thành công.';load()}catch(e){$('msg').textContent=e.message}}
+async function load(){try{const d=await api('/api/admin/players');$('rows').innerHTML='';d.players.forEach(p=>{const tr=document.createElement('tr');for(const v of [p.id,p.username,p.gold,p.xp,p.level,p.wins,p.score,p.banned?'Đã khóa':'Hoạt động']){const td=document.createElement('td');td.textContent=v;tr.appendChild(td)}const td=document.createElement('td'),b=document.createElement('button');b.textContent=p.banned?'Mở khóa':'Khóa';b.onclick=()=>ban(p.id,!p.banned);td.appendChild(b);tr.appendChild(td);$('rows').appendChild(tr)});$('msg').textContent='Đã tải '+d.players.length+' người chơi.'}catch(e){$('msg').textContent=e.message}}
+async function ban(id,banned){try{await api('/api/admin/players/'+id+'/ban',{banned});load()}catch(e){$('msg').textContent=e.message}}
+</script></body></html>

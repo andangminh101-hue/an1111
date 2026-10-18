@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Gold Tower Defense</title><style>
+body{margin:0;background:#101522;color:#f3f5fb;font:16px system-ui}main{max-width:900px;margin:auto;padding:24px}.panel{background:#1b2435;border:1px solid #344159;border-radius:16px;padding:18px;margin:14px 0}input,button{font:inherit;padding:11px;border-radius:8px;border:1px solid #52617a;margin:4px}input{background:#101522;color:white;max-width:100%}button{background:#f3b632;color:#171717;border:0;font-weight:700;cursor:pointer}small,.muted{color:#aab5c8}li{padding:7px}a{color:#f3b632}.row{display:flex;flex-wrap:wrap;gap:8px}.row>*{flex:1}pre{white-space:pre-wrap}
+</style></head><body><main>
+<h1>🏰 Gold Tower Defense</h1><p class="muted">Server riêng • Tài khoản • Lưu tiến trình • Bảng xếp hạng</p>
+<div class="panel"><h2>Tài khoản</h2><div class="row"><input id="username" placeholder="Tên tài khoản"><input id="password" type="password" placeholder="Mật khẩu"></div><div class="row"><button onclick="auth('register')">Đăng ký</button><button onclick="auth('login')">Đăng nhập</button><button onclick="logout()">Đăng xuất</button></div><pre id="status">Chưa đăng nhập.</pre></div>
+<div class="panel"><h2>Hồ sơ người chơi</h2><pre id="profile">Đăng nhập để xem hồ sơ.</pre></div>
+<div class="panel"><h2>🏆 Bảng xếp hạng</h2><ol id="board"></ol><button onclick="loadBoard()">Làm mới</button></div>
+<div class="panel"><h2>Kết nối game của bạn</h2><p>API server đã có khung tài khoản và lưu kết quả. Hãy kết nối game client với các API trong README; kết quả trận đấu cần được xác minh ở server trước khi dùng trong game thật.</p><a href="/admin">Mở trang quản trị viên</a></div>
+</main><script src="/socket.io/socket.io.js"></script><script>
+const $=id=>document.getElementById(id);
+async function api(url,body){const r=await fetch(url,{method:body?'POST':'GET',headers:{'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});const d=await r.json();if(!r.ok)throw Error(d.error||'Có lỗi');return d}
+async function auth(kind){try{const d=await api('/api/'+kind,{username:$('username').value,password:$('password').value});$('status').textContent=kind==='login'?'Đăng nhập thành công.':'Tạo tài khoản thành công.';showProfile(d.player)}catch(e){$('status').textContent=e.message}}
+async function logout(){try{await api('/api/logout',{});$('status').textContent='Đã đăng xuất.';$('profile').textContent='Chưa đăng nhập.'}catch(e){$('status').textContent=e.message}}
+function showProfile(p){$('profile').textContent=JSON.stringify(p,null,2)}
+async function loadMe(){try{const d=await api('/api/me');showProfile(d.player)}catch{}}
+async function loadBoard(data){try{const d=data?{leaderboard:data}:await api('/api/leaderboard');$('board').innerHTML='';d.leaderboard.forEach((p,i)=>{const li=document.createElement('li');li.textContent=`${p.username} — Điểm ${p.score} | Thắng ${p.wins} | Cấp ${p.level}`;$('board').appendChild(li)})}catch(e){}}
+if(window.io)io().on('leaderboard:update',loadBoard);loadMe();loadBoard();
+</script></body></html>
